@@ -1,0 +1,20 @@
+{
+  "name": "@essenza/framework",
+  "version": "0.0.1",
+  "description": "Essenza React Library",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erikcar/essenza.git"
+  },
+  "keywords": ["essenza","react","framework"],
+  "author": "Erik Cardini",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/erikcar/essenza/issues"
+  },
+  "homepage": "https://github.com/erikcar/essenza#readme" ,
+  "workspaces": [
+    "./packages/*"
+  ]
+}
