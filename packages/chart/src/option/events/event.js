@@ -1,7 +1,7 @@
-import { useEffect, useReducer, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import useChart from "../../chartContext";
 
-const Event = ({on, callback, ...rest}) => {
+export const Event = ({on, callback, ...rest}) => {
     const chart = useChart();
     const _callback = useRef()
     useEffect(() => {
@@ -17,5 +17,3 @@ const Event = ({on, callback, ...rest}) => {
 
 	return null;
 };
-
-export default Event;

@@ -1,7 +1,6 @@
 import Feature from "./feature";
+import React from "react";
 
-const Restore = (props) => {
+export const Restore = (props) => {
 	return <Feature name="restore" {...props} />;
 };
-
-export default Restore;

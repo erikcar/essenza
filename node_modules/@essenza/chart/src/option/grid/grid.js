@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import useChart from "../../chartContext";
 
-const Grid = ({ children }) => {
+export const Grid = ({ children }) => {
     const chart = useChart();
     const option = chart.option;
     const grid = useMemo(() => {
@@ -19,5 +19,3 @@ const Grid = ({ children }) => {
     })
     )
 }
-
-export default Grid;

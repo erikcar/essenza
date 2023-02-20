@@ -1,7 +1,8 @@
 import useChart from "../../chartContext";
 import Feature from "./feature";
+import React from "react";
 
-const ExportCSV = ({icon, ...rest}) => {
+export const ExportCSV = ({icon, ...rest}) => {
     const chart = useChart();
 
     rest.icon = icon || 'path://M18 21H6a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3zM6 5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1z';
@@ -25,5 +26,3 @@ const ExportCSV = ({icon, ...rest}) => {
 
 	return <Feature name="myFeature" {...rest} />;
 };
-
-export default ExportCSV;

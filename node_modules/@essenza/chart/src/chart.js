@@ -89,7 +89,7 @@ const propTypes = {
 }
 
 EChart.displayName = 'Chart';
-EChart.propTypes = propTypes;
+//EChart.propTypes = propTypes;
 
 export default Object.assign(EChart, {
 

@@ -1,8 +1,6 @@
 import Axis from "./axis";
+import React from "react";
 
-
-const LogAxis = (props) => {
+export const LogAxis = (props) => {
 	return <Axis type="log" {...props} />;
 };
-
-export default LogAxis;

@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import React,{ useMemo } from "react";
 import useChart from "../chartContext";
 
-const Legend = (props) => {
+export const Legend = (props) => {
   const chart = useChart();
 
   useMemo(() => {
@@ -20,4 +20,4 @@ const Legend = (props) => {
   return null;
 };
 
-export default Legend;
+//export default Legend;

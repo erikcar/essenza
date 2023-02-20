@@ -1,7 +1,6 @@
 import Serie from "./serie";
+import React from "react";
 
-const Scatter = (props) => {
+export const Scatter = (props) => {
 	return <Serie type="scatter" {...props} />;
 };
-
-export default Scatter;

@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import React,{ useMemo } from "react";
 
-const Zoom = ({ zoom, ...rest }) => {
+export const Zoom = ({ zoom, ...rest }) => {
     useMemo(() => {
         if (zoom) {
             zoom.push(rest);

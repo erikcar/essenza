@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import React,{ useMemo } from "react";
 
-const GridItem = ({ grid, ...rest }) => {
+export const GridItem = ({ grid, ...rest }) => {
     useMemo(() => {
         if (grid) {
             grid.push(rest);
@@ -9,5 +9,3 @@ const GridItem = ({ grid, ...rest }) => {
 
     return null;
 }
-
-export default GridItem;

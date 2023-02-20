@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import useChart from "../../chartContext";
 
-const XAxis = ({ children, ...rest }) => {
+export const XAxis = ({ children, ...rest }) => {
   const chart = useChart();
 
   const axis = useMemo(() => {
@@ -23,5 +23,3 @@ const XAxis = ({ children, ...rest }) => {
       : null
   );
 };
-
-export default XAxis;

@@ -1,7 +1,7 @@
-import { useMemo } from "react";
+import React,{ useMemo } from "react";
 import useChart from "../chartContext";
 
-const Title = (props) => {
+export const Title = (props) => {
     const chart = useChart();
 	
     useMemo(() => {
@@ -12,5 +12,3 @@ const Title = (props) => {
 
 	return null;
 };
-
-export default Title;

@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 
-const Axis = ({ axis, ...rest }) => {
+export const Axis = ({ axis, ...rest }) => {
   useMemo(() => {
     if (axis) {
       axis.push(rest);

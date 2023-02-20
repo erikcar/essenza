@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import useChart from "../../chartContext";
 
-const YAxis = ({ direction, children, ...rest }) => {
+export const YAxis = ({ direction, children, ...rest }) => {
   const chart = useChart();
 
   const yaxis = useMemo(() => {
@@ -23,5 +23,3 @@ const YAxis = ({ direction, children, ...rest }) => {
       : null
   );
 };
-
-export default YAxis;

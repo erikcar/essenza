@@ -1,7 +1,6 @@
 import Axis from "./axis";
+import React from "react";
 
-const ValueAxis = (props) => {
+export const ValueAxis = (props) => {
 	return <Axis type="value" {...props} />;
 };
-
-export default ValueAxis;

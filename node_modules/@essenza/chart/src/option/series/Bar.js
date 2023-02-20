@@ -1,7 +1,6 @@
+import React from "react";
 import Serie from "./serie";
 
-const Bar = (props) => {
+export const Bar = (props) => {
 	return <Serie type="bar" {...props} />;
 };
-
-export default Bar;

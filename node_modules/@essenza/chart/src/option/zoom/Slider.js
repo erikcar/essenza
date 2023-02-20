@@ -1,7 +1,6 @@
 import Zoom from "./zoom";
+import React from "react";
 
-const ZoomSlider = (props) => {
+export const ZoomSlider = (props) => {
 	return <Zoom type="slider" {...props} />;
 };
-
-export default ZoomSlider;

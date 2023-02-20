@@ -1,7 +1,7 @@
 import Axis from "./axis";
+import React from "react";
 
-const CategoryAxis = (props) => {
+export const CategoryAxis = (props) => {
 	return <Axis type="category" {...props} />;
 };
 
-export default CategoryAxis;

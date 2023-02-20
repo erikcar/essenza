@@ -1,7 +1,6 @@
 import Serie from "./serie";
+import React from "react";
 
-const Line = (props) => {
+export const Line = (props) => {
 	return <Serie type="line" {...props} />;
 };
-
-export default Line;

@@ -1,7 +1,6 @@
 import Zoom from "./zoom";
+import React from "react";
 
-const ZoomInside = (props) => {
+export const ZoomInside = (props) => {
 	return <Zoom type="inside" {...props} />;
 };
-
-export default ZoomInside;

@@ -1,7 +1,7 @@
-import {useMemo } from "react";
+import React, {useMemo } from "react";
 import useChart from "../chartContext";
 
-const Tooltip = (props) => {
+export const Tooltip = (props) => {
     const chart = useChart();
 	
     useMemo(() => {
@@ -12,5 +12,3 @@ const Tooltip = (props) => {
 
 	return null;
 };
-
-export default Tooltip;

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import useChart from "../../chartContext";
 
-const Features = ({ children }) => {
+export const Features = ({ children }) => {
     const chart = useChart();
     const option = chart.option;
     const feature = useMemo(() => {
@@ -19,5 +19,3 @@ const Features = ({ children }) => {
     })
     )
 }
-
-export default Features;

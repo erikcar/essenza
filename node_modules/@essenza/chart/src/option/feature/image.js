@@ -1,7 +1,6 @@
 import Feature from "./feature";
+import React from "react";
 
-const ExportImage = (props) => {
+export const ExportImage = (props) => {
 	return <Feature name="saveAsImage" {...props} />;
 };
-
-export default ExportImage;

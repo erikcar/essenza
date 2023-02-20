@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import useChart from "../../chartContext";
 
-const DataZoom = ({ children }) => {
+export const DataZoom = ({ children }) => {
     const chart = useChart();
     const option = chart.option;
     const zoom = useMemo(() => {
@@ -19,5 +19,3 @@ const DataZoom = ({ children }) => {
     })
     )
 }
-
-export default DataZoom;
