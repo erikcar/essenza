@@ -1,0 +1,32 @@
+{
+  "name": "@essenza/commerce",
+  "version": "1.0.0",
+  "description": "ecommerce essenza library",
+  "module": "dist/es.commerce.js",
+  "types": "dist/es.commerce.d.ts",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "build": "webpack",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "essenza",
+    "ecommerce"
+  ],
+  "author": "Erik Cardini",
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.22.1",
+    "@babel/preset-env": "^7.22.2",
+    "babel-loader": "^9.1.2",
+    "webpack": "^5.84.1",
+    "webpack-cli": "^5.1.1"
+  },
+  "peerDependencies": {
+    "essenza": "file:../essenza",
+    "antd": "^5.0.7",
+    "react": ">=18.0.0"
+  }
+}
