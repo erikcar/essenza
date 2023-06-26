@@ -5,7 +5,7 @@ import { useModel } from "../hook/SystemHook";
 
 /**
  * 
- * @param {EntityModel} model 
+ * @param {Model} model 
  */
 function PopOverButtonModel(model){
     model.Subscribe("SELECTION", () => model.state.setVisible(false), null, null);
@@ -36,7 +36,7 @@ export function PopOverButton(info) {
             visible={model.state.visible}
             onVisibleChange={handleVisibleChange}
         >
-            <Button type="primary">{info.title}</Button>
+            <Button className={info.className}>{info.title}</Button>
         </Popover>
     )
 }

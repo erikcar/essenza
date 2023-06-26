@@ -7,55 +7,65 @@ import { VistaApp } from "./Vista";
 
 function Messenger() {
 
-  this.intents = {};
+  this.intents = new Map();
 
   /**
-   * @param {string} intent 
+   * @param {string} event 
    * @param {string} context 
    * @param {function | string} emitter can be vmodel function or vid. if view has vid defined then is the emitter.
    */
-  this.Subscribe = function (intent, emitter, context, control) {
-    let flow;
-    if (this.intents.hasOwnProperty(intent))
-      flow = this.intents[intent];
-    else {
-      flow = new Flow();
-      this.intents[intent] = flow;
+  this.Subscribe = function (event, emitter, target, context, control) {
+    if(emitter instanceof Observable || isString(emitter)){
+      target = emitter;
+      emitter = control.skin;
     }
 
-    return new Observer(flow, context, emitter, control);
-  };
+    let flow;
+    if (this.intents.has(emitter))
+      flow = this.intents.get(emitter);
+    else {
+      flow = new Flow();
+      this.intents.set(emitter, flow);
+    }
 
-  this.Publish = function (event, value, emitter, task, data, model, context, control) {
+    return new Observer(flow, {context, event, control, target});
+  };
+//target
+  this.Publish = function (event, value, emitter, task, data, model, context, control, target) {
     const info = {}; // data || {}
     const intents = this.intents;
     return new Promise(function (resolve, reject) {
-      const flow = intents[event]
-        ? intents[event]
+      const flow = intents.has(emitter)
+        ? intents.get(emitter)
         : new Flow();
 
       info.data = data; //Eventualmente commentare
-      info.model = model;
-      info.state = model?.state;
+      info.emodel = model;
+      info.estate = model?.state;
       info.control = control;
-      flow.run(task, value, info, context, emitter, resolve, reject);
+      info.target = target;
+      flow.run(task, value, info, context, emitter, event, target, resolve, reject);
     });
   };
 
   //DA FARE RAGIONAMENTO PER FUNZIONI NON REFERENZIATE, ANCHE PER FARE UNSCRIBE
   this.Unscribe = function (intent, context, emitter) {
-    if (this.intents.hasOwnProperty(intent) && this.intents[intent].remove(context, emitter)) {
-      delete this.intents[intent];
+    if (this.intents.has(intent) && this.intents.get(intent).remove(context, emitter)) {
+      this.intents.delete(intent);
     }
   };
 
   this.UnscribeContext = function (context) {
-    for (const key in this.intents) {
+    for (let [key, intent] of this.intents){
+      if (intent.remove(context))
+          this.intents.delete(key);
+    }
+    /*for (const key in this.intents) {
       if (Object.hasOwnProperty.call(this.intents, key)) {
         if (this.intents[key].remove(context))
           delete this.intents[key];
       }
-    }
+    }*/
   }
 }
 
@@ -77,6 +87,7 @@ const sourceHandler = {
   },
   set(target, prop, value) {
     target.root = DataGraph.findOrCreateGraph(target.etype + "." + prop);
+    target.root.deepFormat(value);
     target.root.data = value; //Non è necessario formattare?
     target.root.notify();
     return true;
@@ -91,7 +102,7 @@ export function Controller() {
   this.contextid = null;
   this.app = null;
   this.popup = null;
-  this.model = new EntityModel();
+  this.model = new Model();
   this.inject = true;
 
   //quando setto command guardo se per component ( o view ) associata al controller esiste override e apllico eventualmente
@@ -117,7 +128,12 @@ export function Controller() {
     return new StateCollection(state ? [...state] : null);
   };
 
-  this.validate = async function (skin, key) {
+  this.validate = async function (model, key) {
+    const form = model.getElement(key);
+    return form.hasOwnProperty("validate") ? form.validate() : { isValid: false, model: model };
+  }
+
+  this.validateAll = async function (skin, key) {
     let state = this.getState(skin).source;
     const result = { isValid: false, model: state };
     if (state) {
@@ -139,8 +155,8 @@ export function Controller() {
     return result;
   }
 
-  this.Subscribe = function (intent, emitter, context) {
-    return messenger.Subscribe(intent, emitter === undefined ? this.skin : emitter, context === undefined ? this.context : context, this);
+  this.Subscribe = function (intent, emitter, target) {
+    return messenger.Subscribe(intent, emitter === undefined ? this.skin : emitter, target, this.context, this);
   };
 
   this.publish = function (intent, value, task, data, model) {
@@ -151,9 +167,9 @@ export function Controller() {
     return this.publish(intent, value, this.intent[intent], data, model).catch((r) => console.log(r));
   }
 
-  this.observe = function (emitter, intent, context) {
+  this.observe = function (emitter, intent, target) {
     if (!intent) return;
-    return this.Subscribe(intent, emitter, context);
+    return this.Subscribe(intent, emitter, target);
   }
 
   this.ResolveClass = function (classType) {
@@ -228,16 +244,28 @@ export function Controller() {
 
 
 //ViewModel / StateModel
-export function EntityModel(vid) {
+export function Model(vid) {
   this.vid = vid;
   this.control = null;
   this.state = { __val: null, __refresh: null };
   
   this.parent = null;
 
+  this.register = function(key, element){
+    if(!this.elements) this.elements = {};
+    this.elements[key] = element;
+  }
+
+  this.getElement = function(key) { return this.elements? this.elements[key] : null;}
+
+  this.validate = async function (key) {
+    const form = this.getElement(key);
+    return form.hasOwnProperty("validate") ? form.validate() : { isValid: false, model: this };
+  }
+
   this.ancestor = function(skin){
-    let p = this.parent;
-    while(p){
+    let p = this;
+    while(p !== undefined){
       if(p.skin === skin) break;
       p = p.parent;
     }
@@ -253,19 +281,21 @@ export function EntityModel(vid) {
     return p;
   }
 
-  this.discendant = function(path){
+  this.find = function(path, element){
+    if(!Array.isArray(path)) path = [path];
+
     let child = this.child;
 
     for (let k = 0; k < path.length; k++) {
       const node = path[k];
       while(child){
-        if(child === node || child.vid === node) break;
+        if(child.skin === node || child.vid === node) return child && element? child.elements[element] : child;
         child = child.brother;
       }
       if(!child) break;
     }
 
-    return child;
+    return null;
   }
 
   this.read = function (m, f) {
@@ -351,7 +381,6 @@ export function EntityModel(vid) {
   }
 }
 
-//EntityModel
 export function DataModel(etype, defaultOption) {
   ApiService.call(this, defaultOption);
 
@@ -373,6 +402,26 @@ export function DataModel(etype, defaultOption) {
 
   this.Where = (condition, params, complete, schema) => {
     return new Graph(null, params).fromSchema(this.etype, complete ? "item" : "list", condition, complete, schema).ExecuteQuery();
+  };
+
+  this.GraphQuery = function (query, params, op, permanent) {
+    let opt;
+    if (typeof op === 'string')
+      opt = { apiOp: op };
+    else if (op)
+      opt = op;
+
+    let path;
+    /*if (schema.charAt(0) === '[') {
+      path = '[' + this.etype + ']' + '.' + schema.substring(1,schema.length-1);
+    }
+    else {
+      path = schema.indexOf(':') > -1 ? schema : this.etype + '.' + schema;
+    }*/
+
+    const graph = new Graph(query, params, permanent);
+    console.log("GRAPH-PARSE-WITH-SCHEMA", graph);
+    return graph.ExecuteQuery(opt);
   };
 
   this.GraphApi = function (schema, params, op, permanent) {
@@ -423,19 +472,24 @@ function ModelMap(){
   this.last = null;
 
   this.link = function(model){
-    if(this.parent){
+    if(this.root === null){
+      this.root = model;
+      model.parent = undefined;
+    }
+    else if(model.parent === null){ //if(this.parent){
       if(this.parent.child){
         model.brother = this.parent.child;
       }
       this.parent.child = model;
       model.parent = this.parent;
     }
-    
+    console.log("MODEL-MAP-LINK", model.skin.name);
     this.parent = model; //Lo faccio in modo separato?
   }
 
   this.unlink = function(model){
-    this.parent = model.parent;
+    console.log("MODEL-MAP-UNLINK", this.parent?.skin.name);
+    this.parent = this.parent?.parent;
   }
 
 }
@@ -449,7 +503,8 @@ export function Context(name) {
   this.elements = {};
   this.controls = new Map();
   this.app = null;
-  this.state = new Map();
+  //this.state = new Map();
+  this.initialized = false;
   this.inject = true;
 
   this.map = new ModelMap();
@@ -525,129 +580,19 @@ export function Context(name) {
   this.dispose = function () {
     messenger.UnscribeContext(this);
     this.controls.clear();
-    //this.state.clear();
-    /*for (let key of this.controls.keys()){
-        key._model = null;
-    }*/
-    //foreach in this.models.key => delete key._model
     console.log("CONTEXT DISPOSE", this.name);
   }
 }
 
-/*export function Observer(fields, emitter) {
-  this.actions = [];
-  this.fields = fields;
-  this.emitter = emitter;
-
-  this.Apply = function (info) {
-    console.log("INIT APPLY", info, this.fields, this.emitter);
-    if ((',' + this.fields + ',').indexOf(',' + info.field + ',') === -1 || (this.emitter && (',' + this.emitter + ',').indexOf(',' + info.emitter + ',') === -1))
-      return;
-
-    console.log("PASSA APPLY");
-    info.fields = this.fields;
-
-    for (let k = 0; k < this.actions.length; k++) {
-      if (!this.actions[k].apply(null, [info, info.target]) || info.stop)
-        break;
-    }
+export function Observable(model, name){
+  this.model = model;
+  this.name = name;
+  this.emit = function(event, value, data, task){
+    return messenger.Publish(event, value, this.model.skin, task, data, this.model, this.model.control.context, this.model.control, {key: this.name, current: this});
   }
 
-  this.hasValue = function () {
-    this.actions.push((info) => {
-      const fields = info.fields.split(',');
-      console.log("HAS VALUE", fields);
-      let v;
-      for (let k = 0; k < fields.length; k++) {
-        v = info.values[fields[k]];
-        if (v && v.hasOwnProperty("value")) v = v.value;
-        if (!v) return false;
-      }
-      return true;
-    });
-
-    return this;
-  }
-
-  this.Validate = function (propage) {
-    this.actions.push((info) => {
-      info.valid = true;
-      if (!info.schema)
-        return true;
-      //Validation
-      return propage || info.valid;
-    });
-
-    return this;
-  }
-
-  this.make = function (action) {
-    this.actions.push(action);
-    return this;
-  }
-}*/
-
-/**
- * Osservable is associate with one data source (item or array) and osserve state change on that data
- * @param {*} target 
- * @param {*} emitters 
- */
-export function Observable(target, source, emitters, schema, oclass) {
-  this.target = target;
-  this.source = source;
-  this.mutation = source ? { ...source } : {};
-  this.emitters = emitters || [];
-  this.observers = [];
-  this.schema = schema;
-  this.oclass = oclass || Observer;
-
-  //Qualunque sia l'emitter o posso anche selezionare???
-  /**
-   * 
-   * @param {*} fields stringa separata da virgola
-   * @param {*} emitters stringa separata da virgola
-   */
-  this.observe = function (fields, emitters) {
-    if (fields === '*') {
-      fields = ",";
-      for (const key in this.source) {
-        fields += key + ','
-      }
-    }
-    const observer = new this.oclass(fields, emitters);
-    this.observers.push(observer);
-    return observer;
-  };
-
-  this.addEmitter = function (emitter) {
-    emitter.observable = this;
-  };
-
-  this.notify = function (info) {
-    info.target = this.target;
-    info.source = this.source;
-    info.schema = this.schema;
-    for (let k = 0; k < this.observers.length; k++) {
-      this.observers[k].Apply(info);
-    }
-  };
-
-  this.onPublish = function (value, data) {
-    //const data = info.data;
-    const field = data.field;
-    if (data.value && data.value.hasOwnProperty('label')) {
-      data.value = data.value.value;
-      data.values = { ...data.values };
-      data.values[field] = data.value;
-      data.values[field + "_label"] = data.value.label;
-    }
-    console.log("OBS ON PUBLISH BEFORE", value, data, this.mutation);
-    /*if (this.mutation[field] === data.value)
-      return;*/
-    this.mutation[field] = data.value;
-    console.log("OBS ON PUBLISH", value, data);
-    data.emitter = value;
-    this.notify(data);
+  this.observe = function(event){
+    messenger.Subscribe(event, this.model.skin, {key: this.name, current: this},  this.model.control.context, this.model.control);
   }
 }
 

@@ -10,27 +10,27 @@ export function AppModel(etype) {
     DataModel.call(this, etype || "app");
   
     this.login = (user, password) => {
-      return this.ExecuteApi("login: app {*}", { username: user, password: password }, { apiUrl: AppConfig.serviceRoute });
+      return this.ExecuteApi("login", { username: user, password: password }, { apiUrl: AppConfig.serviceRoute });
     }
 
     this.elogin = (user, password, itype) => {
-      return this.ExecuteApi("elogin: app {*}", { username: user, password: password, itype: itype || 0 }, { apiUrl: AppConfig.serviceRoute });//, excludeParams: true
+      return this.ExecuteApi("elogin", { username: user, password: password, itype: itype || 0 }, { apiUrl: AppConfig.serviceRoute });//, excludeParams: true
     }
   
     this.platformin = (user, password, itype) => {
-      return this.ExecuteApi("platformin: app {*}", { username: user, password: password, itype: itype || 0 }, { apiUrl: AppConfig.serviceRoute });//, excludeParams: true
+      return this.ExecuteApi("platformin", { username: user, password: password, itype: itype || 0 }, { apiUrl: AppConfig.serviceRoute });//, excludeParams: true
     }
 
     this.testupload = () => {
-      return this.ExecuteApi("testupload: app {*}");
+      return this.ExecuteApi("testupload");
     }
   
     this.test = (data) => {
-      return this.ExecuteApi("jlesson: app {*}", data);
+      return this.ExecuteApi("jlesson", data);
     }
   
     this.signin = (email, password) => {
-      return this.ExecuteApi("esignin: app {*}", { email: email, password: password }, { apiUrl: AppConfig.serviceRoute });
+      return this.ExecuteApi("esignin", { email: email, password: password }, { apiUrl: AppConfig.serviceRoute });
     }
   
     this.invitein = (user, route) => {
@@ -41,37 +41,37 @@ export function AppModel(etype) {
         info.tbusinessname = user.tbusinessname;
       if(user.hasOwnProperty("idplatform"))
         info.idplatform = user.idplatform;*/
-      return this.ExecuteApi("invitein: app {*}", data, { apiUrl: AppConfig.serviceRoute });
+      return this.ExecuteApi("invitein", data, { apiUrl: AppConfig.serviceRoute });
     }
   
     this.passwordRequest = (email, route) => {
-      return this.ExecuteApi("passrequest: app {*}", {email:email, route: route}, { apiUrl: AppConfig.serviceRoute });
+      return this.ExecuteApi("passrequest", {email:email, route: route}, { apiUrl: AppConfig.serviceRoute });
     }
   
     this.passwordReset = (request) => {
-      return this.ExecuteApi("passreset: app {*}", request, { apiUrl: AppConfig.serviceRoute });
+      return this.ExecuteApi("passreset", request, { apiUrl: AppConfig.serviceRoute });
     }
   
     this.changePassword = (user) => {
-      return this.ExecuteApi("passchange: app {*}", { currentPassword: user.tpassword, newPassword: user.npassword }, { apiUrl: AppConfig.serviceRoute });
+      return this.ExecuteApi("passchange", { currentPassword: user.tpassword, newPassword: user.npassword }, { apiUrl: AppConfig.serviceRoute });
     }
   
     this.updateProfile = (user) => {
-      return this.ExecuteApi("updateprofile: app {*}", this.getMutation(user), { apiUrl: AppConfig.serviceRoute });
+      return this.ExecuteApi("updateprofile", this.getMutation(user), { apiUrl: AppConfig.serviceRoute });
     }
 
     this.createProfile = (user, emailed) => {
       const data = this.getMutation(user);
       if(emailed) data.temail = user.temail;
-      return this.ExecuteApi("createprofile: app {*}", data, { apiUrl: AppConfig.serviceRoute });
+      return this.ExecuteApi("createprofile", data, { apiUrl: AppConfig.serviceRoute });
     }
     
     this.validate = (token) => {
-      return this.ExecuteApi("validate: app {*}", { token: token }, { apiUrl: AppConfig.serviceRoute }).catch(e => console.log(e));
+      return this.ExecuteApi("validate", { token: token }, { apiUrl: AppConfig.serviceRoute }).catch(e => console.log(e));
     }
   
     this.checkSession = (app) => {
-      return this.ExecuteApi("session: app {*}", null, { apiUrl: AppConfig.serviceRoute }).then(r => {
+      return this.ExecuteApi("session", null, { apiUrl: AppConfig.serviceRoute }).then(r => {
         if (r === 'NACK')
           app.navigate("/login");
         else
@@ -89,24 +89,24 @@ export function AppModel(etype) {
       else
         condition = '';
 
-      return this.ExecuteQuery('list: [users] (itype>-1 ' + condition + ' ) {*, -O itype#tsurname#temail }');
+      return this.GraphQuery('list: [users] (itype>-1 ' + condition + ' ) {*, -O itype#tsurname#temail }');
     }
 
     this.platformList = (permanent) => {
-      return this.ExecuteApi(`list: [users] {*}`, null, "platformuser", permanent);
+      return this.GraphApi(`list: [users] {*}`, null, "platformuser", permanent);
     }
 
     this.partnerList = (permanent, itype) => {
       itype = itype || 2;
-      return this.ExecuteApi(`partners: [users] {*}`, {itype: itype}, null, permanent);
+      return this.GraphApi(`partners: [users] {*}`, {itype: itype}, null, permanent);
     }
   
     this.profile = () => {
-      return this.ExecuteApi("profile: users {*}");
+      return this.GraphApi("profile: users");
     }
 
     this.eprofile = (email) => {
-      return this.ExecuteApi("profile: users {*}", {email: email}, "eprofile");
+      return this.GraphApi("profile: users", {email: email}, "eprofile");
     }
 
   }

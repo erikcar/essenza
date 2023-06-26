@@ -1,0 +1,31 @@
+
+// override variables
+
+/*$primary-color: #F8E16C;
+$secondary-color: #6d0e0e;
+$swap-color: #FFFFFF;
+$bg-main: #FFFFFF;
+$bg-block: #f0f0f0;
+$input-bg-color: #f0f0f0;
+$ant-table-bg-color: #F8E16C;
+$lite: #f0f0f0;
+$color-swap-map: (
+    #F8E16C: black,
+);
+$btn-bordered: #c7c7c7;*/
+
+@import 'essenza/src/style/lib.scss';
+
+// include 
+@include es-header;
+
+// start project style
+/*
+button {
+    border-radius: 50rem !important;
+}
+
+.avatar-pri{
+    color: black;
+    background-color: #F8E16C;
+}*/

@@ -591,7 +591,7 @@ export function Binding() {
     }
   }
 
-  this.add = function (obj, source, unshift, force) {
+  this.add = function (obj, source, unshift, notrack) {
     //if (!source.scalar) {
 
       const key = source.key;
@@ -602,7 +602,7 @@ export function Binding() {
 
       this.bindings[key].data.push(obj);
 
-      source.node.deepFormat(obj, source.parent, !force);
+      source.node.deepFormat(obj, source.parent, notrack);
 
       obj.__bind = { parent: source.parent }; //this.bindings[key];
       if (unshift) obj.__unshift = undefined;
@@ -642,7 +642,6 @@ export function Binding() {
     if(notrack === undefined) notrack = true;
     source.node.deepFormat(obj, source.parent, notrack);
     obj.__bind = { parent: source.parent };
-    //if (unshift) obj.__unshift = undefined;
   }
 
 }
@@ -735,12 +734,12 @@ export function DataSource(source, node, parent) {
     }
   }
 
-  this.add = function (value, unshift, force) {
+  this.add = function (value, unshift, notrack) {
     if (!this.scalar) {
       if (this.binding)
-        this.binding.add(value, this, unshift, force);
+        this.binding.add(value, this, unshift, notrack);
       if (!this.data) this.data = [];
-      this.data.push(value);
+      //this.data.push(value);
     }
   }
 
@@ -757,10 +756,10 @@ export function DataSource(source, node, parent) {
     }
   }
 
-  this.set = function (value) {
+  this.set = function (value, bind) {
     if (this.scalar) {
       this.data = value;
-      this.binding.format(value, this, false);
+      bind ? this.binding.format(value, this, false) : this.node.deepFormat(value, this.parent);
     }
   }
 
@@ -792,17 +791,7 @@ export function DataSource(source, node, parent) {
   this.mutateParent = function (field, value) {
     if(this.owner)
       this.owner.mutate(field, value);
-    /*const data = this.parent;
-    if (data) {
-      if (data.hasOwnProperty('__temp__')) {
-        data.__temp__ === 'F' ? this.binding.add(data, this) : this.binding.format(data, this);
-        delete data.__temp__;
-      }
-      this.node.parent.mutate(field, value, data);
-    }*/
   }
-
-
 
   /* END BINDING SECTION*/
 
@@ -831,7 +820,7 @@ export function DataSource(source, node, parent) {
       }
       ar = [];
       for (let k = 0; k < data.length; k++) {
-        ar.push(callback(this.build(data[k], this.node, this.parent, true, true), k));
+        ar.push(callback(this.build(data[k], this.node, this.parent, true, true), data[k], k));
       }
     }
     return ar;
@@ -872,22 +861,14 @@ export function DataSource(source, node, parent) {
     return this.getData(path, true);
   }
 
-  /**** END DATA SECTION ******/
+  this.save = function(option, parameters){
+    return this.node.save(option, parameters);
+  }
 
-  /*this.clear = function () {
-    if (this.node && this.data) {
-      //debugger;
-      this.node.traverse((node, data) => {
-        if (data) {
-          if (!Array.isArray(data))
-            data = [data];
-          for (let k = 0; k < data.length; k++) {
-            node.Mutation.delete(data[k].id);
-          }
-        }
-      }, true, this.data)
-    }
-  }*/
+  this.notify = function(){
+    this.node.notify();
+  }
+  /**** END DATA SECTION ******/
 }
 
 Object.defineProperty(DataSource.prototype, "key", {
@@ -1027,6 +1008,7 @@ export function GraphNode(name, uid, parent, graph, etype) {
           if (Array.isArray(source)) {
             for (let j = 0; j < source.length; j++) {
               const parent = source[j];
+              if(!parent) continue;
               this.children[k].traverse(callback, deep, parent[this.children[k].name], parent, generate);
             }
           }
@@ -1145,7 +1127,6 @@ export function GraphNode(name, uid, parent, graph, etype) {
   this.deepFormat = function (data, parent, notrack) {
     this.traverse((node, data, parent) => {
       node.formatData(data, parent, notrack);
-
     }, true, data, parent);
   }
   /**
@@ -1166,6 +1147,9 @@ export function GraphNode(name, uid, parent, graph, etype) {
 
     for (let k = 0; k < data.length; k++) {
       const source = data[k];
+
+      if(!source) continue;
+
       let mutated = source.hasOwnProperty("__mutation");
 
       tolink = source.hasOwnProperty("__tolink__");
@@ -1632,7 +1616,7 @@ export function GraphNode(name, uid, parent, graph, etype) {
     //considerando che nel path ci possono essere delle collection?
     //Per ora non prevedo di usare un child direttamente come source, quindi aggiorno sempre da root tutto
     console.log("NOTIFY");
-    if (this.isRoot() || this.source) {
+    if (this.isRoot() || this.data) {
       //this.datasource = new DataSource(this.source, this);//{ data: this.source, node: this };
       console.log("NOTIFY ROOT", this.observers);
       for (let i = 0; i < this.observers.length; i++) {

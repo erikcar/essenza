@@ -1,4 +1,5 @@
 import { VistaApp } from "./Vista";
+import { Apix } from "../service/Apix"
 
 export function ApiService(defaultOption) {
   this.inject = true;
@@ -10,13 +11,17 @@ export function ApiService(defaultOption) {
 
     this.api.formatOption(option);
 
-    const url = op.startsWith('http')? op : option.apiUrl + op;
+    const url = op.startsWith('http')? op : (option.apiUrl || Apix.apiUrl) + op;
 
     return this.api.call(url, params, option).then((result) => {
       console.log("API SERVICE REQUEST RESULT" + result.data, result);
       return result.data;
     }, er => { console.log("ERROR API SERVICE", er); throw er; });
   };
+
+  this.ExecuteApi = function(op, params, option) {
+    return this.CallApi(op, params, option);
+  }
 }
 
 

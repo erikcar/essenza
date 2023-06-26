@@ -10,14 +10,16 @@ function ioTask(input, output) {
 }
 
 //TODO: Da implementare Breaker(block and flow) e gestione result (su value);
-function Block(intent, context, emitter, control) {
+export function Block(intent, token){//} context, event, control) {
   this.pipeLine = null; //se ha più action/trasform/filter => diventa un Array
   this.priority = 0;
-  this.context = context;
-  this.emitter = emitter;
+  
   this._intent = intent ? new ioTask(intent) : null;
-  this.token = context;
-  this.control = control;
+  this.token = token;
+  /*this.control = control;
+  this.context = context;
+  this.event = event;*/
+  this.data = null;
 
   //Da implementare metodi fluent per pipe
   this.intent = function (task) {
@@ -28,21 +30,22 @@ function Block(intent, context, emitter, control) {
   this.pipe = function (task) {
     if (this.pipeLine === null) this.pipeLine = [];
     this.pipeLine.push(task instanceof ioTask ? task : new ioTask(task));
+    return this;
   }
 
   this.pipeBack = function (task) {
-    this.pipe(new ioTask(null, task));
+    return this.pipe(new ioTask(null, task));
   }
 
   this.pipeIO = function (itask, otask) {
-    this.pipe(new ioTask(itask, otask));
+    return this.pipe(new ioTask(itask, otask));
   }
 
-  this.execute = function (info) { //???
-    if(this.control){
-      info.vmodel = info.model.ancestor(this.control.skin);
-      info.vstate = info.vmodel?.state;
-    }
+  this.execute = async function (info) { //???
+
+    info.blockdata = this.data; 
+    info.model = this.token.control? info.emodel.ancestor(this.token.control.skin) : info.emodel;
+    info.state = info.model?.state;
     
     const flow = info.flow;
     flow.break = false;
@@ -50,27 +53,29 @@ function Block(intent, context, emitter, control) {
 
     if (this.pipeLine) {
       for (let k = 0; k < this.pipeLine.length; k++) {
-        this.run(this.pipeLine[k].input, info);
+        await this.run(this.pipeLine[k].input, info);
         if (flow.break) return;
       }
     }
 
     if (this._intent) {
-      this.run(this._intent.input, info);
+      await this.run(this._intent.input, info);
       if (flow.break) return;
     }
 
     if (this.pipeLine) {
       for (let k = this.pipeLine.length - 1; k > -1; k--) {
-        this.run(this.pipeLine[k].output, info);
+        await this.run(this.pipeLine[k].output, info);
         if (flow.break) return;
       }
     }
+
+    info.blockdata = null; 
   }
 
   this.run = async function (task, info) {
     if (task) {
-      const result = task(info);
+      const result = await task(info);
       if (result instanceof Promise) {
         await result;
       }
@@ -79,12 +84,10 @@ function Block(intent, context, emitter, control) {
 }
 
 //TODO: Support for token (Actually token === context)
-export function Observer(flow, context, emitter, control) {
+export function Observer(flow, token){//context, event, control) {
 
   this.flow = flow;
-  this.context = context;
-  this.emitter = emitter;
-  this.control = control;
+  this.token = token;
 
   this.input = function (task) {
     return this.flow.Prepend(this.CreateBlock(task));
@@ -113,14 +116,12 @@ export function Observer(flow, context, emitter, control) {
   }
 
   this.decorate = function (block) {
-    block.context = this.context;
-    block.emitter = this.emitter;
-    block.control = this.control;
+    block.token = this.token;
     block.decorator = this;
   }
 
   this.CreateBlock = function (task) {
-    return new Block(task, this.context, this.emitter, this.control);
+    return new Block(task, this.token);
   }
 }
 
@@ -137,7 +138,7 @@ function FlowState(value) {
     this.reason = error;
   }
 
-  this.BreakFlow = function () {
+  this.Break = function () {
     this.broken = true;
     this.break = true;
     this.reason = BreakFlow;
@@ -173,25 +174,31 @@ export function Flow() {
     return block;
   };
 
-  this.remove = function (token, emitter) {
-    this.inputs = this.inputs.filter((block) => { return (token === null || block.token !== token) && (emitter === undefined || block.emitter !== emitter) }) || [];
-    this.queue = this.queue.filter((block) => { return (token === null || block.token !== token) && (emitter === undefined || block.emitter !== emitter) }) || [];
-    this.outputs = this.outputs.filter((block) => { return (token === null || block.token !== token) && (emitter === undefined || block.emitter !== emitter) }) || [];
-    return this.outputs.length === 0 && this.input.length === 0 && this.queue.length === 0;
+  /**
+   * 
+   * @param {*} token can be block instance to remove or context
+   * @returns 
+   */
+  this.remove = function (token) {
+    this.inputs = this.inputs.filter((block) => (block.token.context !== token) && (token !== block)) || [];
+    this.queue = this.queue.filter((block) => (block.token.context !== token) && (token !== block)) || [];
+    this.outputs = this.outputs.filter((block) => (block.token.context !== token) && (token !== block)) || [];
+    return this.outputs.length === 0 && this.inputs.length === 0 && this.queue.length === 0;
   }
 
-  this.run = async function (task, value, info, context, emitter, resolve, reject) {
+  this.run = async function (task, value, info, context, emitter, event, target, resolve, reject) {
     const flow = new FlowState(value);
     info = info || {};
     info.app = info.control.app;
     info.flow = flow;
 
-    let block;
+    let block, token;
     let running = [];
 
     for (let j = 0; j < this.inputs.length; j++) {
       block = this.inputs[j];
-      if ((!block.context || block.context === context) && (!block.emitter || block.emitter === emitter) && (!block.condition || block.condition())) {
+      token = block.token;
+      if ((!token.context || token.context === context) && (!token.event || token.event === event) && (!token.target || token.target === target.key || token.target === target.current )) {
         running.push(block);
       }
     }
@@ -202,12 +209,13 @@ export function Flow() {
 
     task = task || this.intent;
     if (task) {
-      running.push(task instanceof Block ? task : new Block(task, context, emitter));
+      running.push(task instanceof Block ? task : new Block(task, {context, emitter}));
     }
 
     for (let z = 0; z < this.outputs.length; z++) {
       block = this.outputs[z];
-      if ((!block.context || block.context === context) && (!block.emitter || block.emitter === emitter) && (!block.condition || block.condition())) {
+      token = block.token;
+      if ((!token.context || token.context === context) && (!token.event || token.event === event) && (!token.target || token.target === target.key || token.target === target.current)) {
         running.push(block);
       }
     }
@@ -220,7 +228,7 @@ export function Flow() {
     for (let k = 0; k < running.length; k++) {
 
       info.value = flow.value;
-      running[k].execute(info);
+      await running[k].execute(info);
 
       if (flow.broken) {
         reject(flow); // OR info???

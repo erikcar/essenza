@@ -15,8 +15,6 @@ export const AppRoot = ({ init, onload, schema, onlogin, baseurl, control, child
 
     console.log("APP PROVIDER");
 
-    //const navigator = useNavigate();dev
-    //const [qp] = useSearchParams(); 
     console.log("APP PROVIDER NAV", VistaApp);
     const [app, updateApp] = useState(() => {
         return VistaApp.init(navigator, control, onlogin, PopupManager);
@@ -34,8 +32,6 @@ export const AppRoot = ({ init, onload, schema, onlogin, baseurl, control, child
         app.qp = qp;
     }
 
-    //app.size = useBreakPoint(breakpoint, app);
-    //console.log("APP-PROVIDER-BP", app.size);
     if (token) {
         token.current = app;
     }
@@ -57,7 +53,6 @@ export const AppRoot = ({ init, onload, schema, onlogin, baseurl, control, child
             updateApp({ ...VistaApp });
         }
 
-        //VistaApp.icontainer.service.IPopup = PopupManager;
         //Prima di init e che avvenga prima chiamata api
         if (!noErrorHandler) {
             VistaApp.icontainer.service.IApi.onManagedError = e => {
@@ -78,7 +73,6 @@ export const AppRoot = ({ init, onload, schema, onlogin, baseurl, control, child
                     }
                     else {
                         VistaApp.control.openPopup(<div>Si è verificato un problema, riprovare tra qualche istante. Se il problema persiste riavviare l'applicazione.</div>, "ATTENZIONE");
-
                     }
                 }
                 else if (e.type === "CALL")
@@ -110,8 +104,6 @@ export const AppRoot = ({ init, onload, schema, onlogin, baseurl, control, child
             VistaApp.onlogin(VistaApp);*/
     }, []);
 
-
-
     return (
         <AppContext.Provider value={app} >
             {children}
@@ -120,10 +112,4 @@ export const AppRoot = ({ init, onload, schema, onlogin, baseurl, control, child
     )
 }
 
-/*export function AppRoot({ basename, children, ...rest}) {
-    return 
-        <AppProvider {...rest} content={children}>
-
-        </AppProvider>
-}*/
 export const useApp = () => React.useContext(AppContext)?.current || VistaApp;

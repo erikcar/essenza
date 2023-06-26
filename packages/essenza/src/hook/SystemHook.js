@@ -1,7 +1,7 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { VistaContext } from "../components/Vista";
 import { useApp } from "../core/AppContext";
-import { Context, EntityModel, VistaApp, Controller } from "@essenza/core";
+import { Context, Model, VistaApp, Controller } from "@essenza/core";
 
 /**
  * 
@@ -16,8 +16,18 @@ export function useControl(controller, ctx) { //Add useModelContext()
     return [c];//[m, source];
 }
 
+export function useFragment(model, controller, data){
+    const initialized = useRef(false);
+    if(!initialized.current){
+        controller(model.control, data);
+        initialized.current = true;
+    }
+
+    return model.control;
+}
+
 export function useModel(skin, controller, vid, ctx){
-    const model = useRef(new EntityModel(vid)).current;
+    const model = useRef(new Model(vid)).current;
     const context = ctx || useContext(VistaContext) || VistaApp.context;
 
     [model.state.__val, model.state.__refresh] = useState(false);
@@ -29,7 +39,8 @@ export function useModel(skin, controller, vid, ctx){
         return () => context.unregister(skin, model);
     },[context]);*/
 
-    context.parent = useMemo(() => context.register(skin, model), []);
+    //context.parent = useMemo(() => context.register(skin, model), []);
+    context.register(skin, model);
     model.control = context.controls.get(skin);
 
     if(!model.control){
@@ -47,10 +58,13 @@ export function useModel(skin, controller, vid, ctx){
 export function useVista(skin, controller, contextName) {
     const context = useMemo(() => new Context(contextName || skin.name || controller.name), []); //new Context(contextName || skin.name || controller.name); //useRef(new Context(contextName || skin.name || controller.name));
     const [m, c, s] = useModel(skin, controller, null, context); 
+    if(!context.initialized){
+        context.map.root = m; 
+        context.map.parent = m;
+        context.initialized = true;
+    }
     useEffect(() => { 
         const ctx = context; 
-        ctx.map.root = m; 
-        ctx.map.parent = m;
         return () => ctx.dispose() }, [context])
     return [context, m, c, s];
 }

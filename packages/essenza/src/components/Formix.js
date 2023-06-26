@@ -6,7 +6,7 @@ import { VistaJS } from "./Vista";
 
 const { Item } = Form;
 export function Formix({ control, form, instance, initialValues, observe, children, disabled, ...rest }) {
-    console.log("FORMIX DEBUG", control, form, rest);
+    //console.log("FORMIX DEBUG", control, form, rest);
     if (VistaJS.DEVELOPMENT) {
         if (!form)
             throw new Error("Formix must have model and form instance.");
@@ -24,14 +24,25 @@ export function Formix({ control, form, instance, initialValues, observe, childr
             field = e.target.parentNode.parentNode.parentNode.id;
         if(form.valueChanged(field)){
             const values = form.target.getFieldsValue(true);
-            form.observable.onPublish("onblur", { field: e.target.id, value: values[e.target.id], values: values });
+            //form.observable.onPublish("onblur", { field: e.target.id, value: values[e.target.id], values: values });
+            form.emit("CHANGE", values[e.target.id], { field: e.target.id, values})
         }
     };
 
     const onselect = (e) => {
         console.log("PASSA SELECT", e.detail); //e.target.id, form.target.getFieldsValue(e.target.id), e.target);
-        const values = form.target.getFieldsValue(true);
-        form.observable.onPublish("onselect", { field: e.detail.field, value: values[e.detail.field], values: values, data: e.detail.item });
+        let values = form.target.getFieldsValue(true);
+        const field = e.detail.field;
+        let value = values[field];
+        
+        if (value && value.hasOwnProperty('label')) {
+            values = {...values};
+            values[field + "_label"] = value.label;
+            value = value.value;
+            values[field] = value;
+        }
+
+        form.emit("SELECT", value, { field, values, item: e.detail.item });
     };
 
     const onfocus = (e) =>{

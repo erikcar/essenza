@@ -1,6 +1,6 @@
 import { Form } from "antd";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DataSource, Observable, EntityModel, syncle } from "@essenza/core";
+import { DataSource, Observable, Model, syncle } from "@essenza/core";
 
 const mutation = function (mutated, state, model) {
   const node = state.node;
@@ -43,7 +43,7 @@ export const usePolling = (fnc) =>{
  */
 export const useForm = (name, source, control, formatter, schema) => {
   let model;
-  if (control instanceof EntityModel) {
+  if (control instanceof Model) {
     model = control;
     control = model.control;
   }
@@ -51,23 +51,22 @@ export const useForm = (name, source, control, formatter, schema) => {
   const [target] = Form.useForm();
 
   const form = useMemo(() => {
-    const _form = new ObservableForm(target, source?.data, schema, formatter);
+    const _form = new ObservableForm(target, model);
     if (target && schema) {
       target.schema = schema;
       target.vdata = {};
     }
 
     _form.name = name;
-    _form.target = target;
+    _form.schema = target;
+    _form.formatter = formatter;
     _form.control = control;
     _form.source = source;
 
-    control.context.registerElement(name, _form);
-
     if (model) {
-      if(!model.form) model.form = {};
-      model.form[name] = _form;
+      model.register(name, _form);
     }
+
     return _form;
   }, [])
 
@@ -85,21 +84,23 @@ export const useForm = (name, source, control, formatter, schema) => {
   return form;
 }
 
-export function ObservableForm(form, data, schema, formatter) {
+export function ObservableForm(form, model, name) {
+  Observable.call(this, model, name);
   this.target = form;
-  this.observable = new Observable(form, data, null, schema);
+  //this.observable = new Observable(form, data, null, schema);ù
+  this.name = name;
   this.source = null;
   this.checked = false;
-  this.schema = schema;
-  this.formatter = formatter;
+  this.schema = null;
+  this.formatter = null;
 
   Object.defineProperty(this, "data", {
     get() { return this.source ? this.source.data : undefined; },
   });
 
-  this.observe = function (fields, emitters) {
+  /*this.observe = function (fields, emitters) {
     return this.observable.observe(fields, emitters);
-  }
+  }*/
 
   this.validate = async function (name) {
     const form = this.target;//context.getForm(name);

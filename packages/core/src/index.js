@@ -7,8 +7,8 @@ const version = "1.1.2";
 export {version};
 
 export {Test} from "./intent/testIntent";
-export {BreakFlow, Flow,  Observer} from "./core/flow";
-export { Controller, EntityModel, DataModel, Context,  Observable} from "./core/system";
+export {BreakFlow, Flow,  Observer, Block} from "./core/flow";
+export { Controller, Model, DataModel, Context,  Observable} from "./core/system";
 export {ApiService, FileService} from "./core/service";
 export { AppModel, SystemModel, UserModel } from "./models/SystemModel";
 export { AppService } from "./service/RequestService";

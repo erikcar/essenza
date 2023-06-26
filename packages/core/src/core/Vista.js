@@ -1,7 +1,7 @@
 //import { Context } from "./system";
 import { DataGraph} from "../data/DataGraph";
 import { Apix } from "../service/Apix"
-import {Context, Controller, EntityModel} from "./system";
+import {Context, Controller, Model} from "./system";
 
 /*export const Vista = {
     InitApp: function (INavigate, init) {
@@ -179,7 +179,7 @@ export const VistaApp = {
     logged: false,
     initialized: false,
     current: this,
-    model: new EntityModel(),
+    model: new Model(),
     breakpoint: new BreakPointer(),
     settings: {usertype: 0, defaultRole: 0, roles:["admin"], route:[''], defaultRoute: ''},
     

@@ -25,8 +25,8 @@
     "webpack-cli": "^5.1.1"
   },
   "peerDependencies": {
-    "essenza": "file:../essenza",
     "antd": "^5.0.7",
+    "essenza": "file:../essenza",
     "react": ">=18.0.0"
   }
 }
