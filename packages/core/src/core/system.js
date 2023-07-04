@@ -87,9 +87,7 @@ const sourceHandler = {
   },
   set(target, prop, value) {
     target.root = DataGraph.findOrCreateGraph(target.etype + "." + prop);
-    target.root.deepFormat(value);
-    target.root.data = value; //Non è necessario formattare?
-    target.root.notify();
+    target.root.setData(value); //Gestire anche opzione formatted....
     return true;
   }
 };

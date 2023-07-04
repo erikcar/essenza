@@ -17,6 +17,7 @@ export function isEmpty(obj){
  * @param {*} item 
  */
 export function ArrayRemove(ar, item) {
+    if(!Array.isArray(ar)) return;
     const index = ar.findIndex((el) => el === item);
     if (index > -1) ar.splice(index, 1);
 }
